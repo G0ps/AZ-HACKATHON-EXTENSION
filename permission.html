@@ -81,6 +81,13 @@
       border: 1px solid #ddd;
       border-radius: 4px;
     }
+    
+    #permissionStatus {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      background-color: #f5f5f5;
+    }
   </style>
 </head>
 <body>
@@ -93,6 +100,8 @@
     <button id="permissionBtn">Grant Microphone Permission</button>
     
     <div id="status">Click the button to request permission</div>
+    
+    <div id="permissionStatus">Current permission status: Checking...</div>
     
     <div class="instructions">
       <h2>Chrome Permission Instructions</h2>
@@ -107,67 +116,7 @@
     </div>
   </div>
   
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const permissionBtn = document.getElementById('permissionBtn');
-      const status = document.getElementById('status');
-      
-      // Check if permission was previously granted
-      if (navigator.permissions) {
-        navigator.permissions.query({ name: 'microphone' })
-          .then(permissionStatus => {
-            console.log('Current microphone permission state:', permissionStatus.state);
-            if (permissionStatus.state === 'granted') {
-              status.textContent = 'Microphone permission is already granted! You can close this tab and use the extension.';
-              status.className = 'success';
-              permissionBtn.textContent = 'Permission Already Granted';
-              permissionBtn.disabled = true;
-              
-              // Store the permission status
-              chrome.storage.local.set({ microphonePermission: true }, function() {
-                console.log('Permission saved to storage');
-              });
-            }
-          });
-      }
-      
-      permissionBtn.addEventListener('click', async function() {
-        status.textContent = 'Requesting microphone permission...';
-        status.className = '';
-        
-        try {
-          // Request microphone access with specific constraints for better compatibility
-          const stream = await navigator.mediaDevices.getUserMedia({ 
-            audio: {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true
-            } 
-          });
-          
-          // Keep the stream active for a moment to ensure Chrome registers the permission
-          setTimeout(() => {
-            // Then stop all tracks
-            stream.getTracks().forEach(track => track.stop());
-            console.log('Microphone stream stopped after successful permission');
-          }, 1000);
-          
-          // Save the permission status
-          chrome.storage.local.set({ microphonePermission: true }, function() {
-            console.log('Permission saved to storage');
-          });
-          
-          status.textContent = 'Microphone permission granted! You can now close this tab and use the extension.';
-          status.className = 'success';
-          permissionBtn.textContent = 'Permission Granted';
-          permissionBtn.disabled = true;
-        } catch (error) {
-          console.error('Microphone permission error:', error);
-          status.textContent = 'Error: ' + error.message + '. Please check the instructions below.';
-          status.className = 'error';
-        }
-      });
-    });
-  </script>
+  <!-- Reference the external script file instead of using inline script -->
+  <script src="permission.js"></script>
 </body>
 </html> 

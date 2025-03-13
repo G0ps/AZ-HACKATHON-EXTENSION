@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const copyBtn = document.getElementById('copyBtn');
   const clearBtn = document.getElementById('clearBtn');
   const permissionBtn = document.getElementById('permissionBtn');
+  const testMicBtn = document.getElementById('testMicBtn');
   const status = document.getElementById('status');
   const result = document.getElementById('result');
   const debugInfo = document.getElementById('debug-info');
@@ -106,6 +107,22 @@ document.addEventListener('DOMContentLoaded', function() {
   copyBtn.addEventListener('click', copyText);
   clearBtn.addEventListener('click', clearText);
   permissionBtn.addEventListener('click', openPermissionPage);
+  testMicBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    openMicrophoneTestPage();
+  });
+  
+  // Function to open the permission page
+  function openPermissionPage() {
+    logDebug('Opening permission page...');
+    chrome.tabs.create({ url: 'permission.html' });
+  }
+  
+  // Function to open the microphone test page
+  function openMicrophoneTestPage() {
+    logDebug('Opening microphone test page');
+    chrome.tabs.create({ url: chrome.runtime.getURL('microphone-test.html') });
+  }
   
   // Add test microphone link to debug section
   const testMicLink = document.createElement('a');
@@ -119,18 +136,6 @@ document.addEventListener('DOMContentLoaded', function() {
     openMicrophoneTestPage();
   });
   debugInfo.parentNode.insertBefore(testMicLink, debugInfo);
-  
-  // Function to open the permission page
-  function openPermissionPage() {
-    logDebug('Opening permission page...');
-    chrome.tabs.create({ url: 'permission.html' });
-  }
-  
-  // Function to open the microphone test page
-  function openMicrophoneTestPage() {
-    logDebug('Opening microphone test page...');
-    chrome.tabs.create({ url: 'microphone-test.html' });
-  }
   
   // Speech recognition event handlers
   recognition.onstart = function() {

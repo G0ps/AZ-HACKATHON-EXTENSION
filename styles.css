@@ -120,6 +120,18 @@ h1 {
   background-color: #f09b00;
 }
 
+.test-mic-link {
+  display: block;
+  margin-top: 8px;
+  color: #4285f4;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.test-mic-link:hover {
+  text-decoration: underline;
+}
+
 .debug-container {
   margin-top: 15px;
   font-size: 12px;

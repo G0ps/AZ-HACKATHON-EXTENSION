@@ -1,0 +1,144 @@
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  width: 350px;
+  margin: 0;
+  padding: 0;
+  background-color: #f5f5f5;
+}
+
+.container {
+  padding: 15px;
+}
+
+h1 {
+  font-size: 20px;
+  text-align: center;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 15px;
+  justify-content: center;
+}
+
+.btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: #4285f4;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn:hover {
+  background-color: #3367d6;
+}
+
+.btn:disabled {
+  background-color: #a9a9a9;
+  cursor: not-allowed;
+}
+
+#startBtn {
+  background-color: #0f9d58;
+}
+
+#startBtn:hover {
+  background-color: #0b8043;
+}
+
+#stopBtn {
+  background-color: #db4437;
+}
+
+#stopBtn:hover:not(:disabled) {
+  background-color: #c53929;
+}
+
+.status-container {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#status {
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+}
+
+.result-container {
+  margin-top: 10px;
+}
+
+#result {
+  width: 100%;
+  height: 150px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: none;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  background-color: white;
+}
+
+.recording {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(219, 68, 55, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(219, 68, 55, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(219, 68, 55, 0);
+  }
+}
+
+.permission-container {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.permission-btn {
+  background-color: #f4b400;
+  width: 100%;
+}
+
+.permission-btn:hover {
+  background-color: #f09b00;
+}
+
+.debug-container {
+  margin-top: 15px;
+  font-size: 12px;
+}
+
+.debug-container summary {
+  cursor: pointer;
+  color: #666;
+  font-weight: 500;
+}
+
+#debug-info {
+  margin-top: 5px;
+  padding: 8px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  max-height: 100px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 11px;
+} 

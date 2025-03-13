@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Microphone Permission</title>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    h1 {
+      color: #4285f4;
+    }
+    
+    .container {
+      margin-top: 30px;
+    }
+    
+    button {
+      padding: 10px 20px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    
+    button:hover {
+      background-color: #3367d6;
+    }
+    
+    #status {
+      margin-top: 20px;
+      font-style: italic;
+      color: #666;
+    }
+    
+    .success {
+      color: #0f9d58;
+      font-weight: bold;
+    }
+    
+    .error {
+      color: #db4437;
+      font-weight: bold;
+    }
+    
+    .instructions {
+      text-align: left;
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+    }
+    
+    .instructions h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .instructions ol {
+      margin-left: 20px;
+      padding-left: 0;
+    }
+    
+    .instructions li {
+      margin-bottom: 10px;
+    }
+    
+    .instructions img {
+      max-width: 100%;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Voice to Text Converter</h1>
+  
+  <div class="container">
+    <p>This extension requires microphone access to convert your voice to text.</p>
+    <p>Please click the button below to grant microphone permission.</p>
+    
+    <button id="permissionBtn">Grant Microphone Permission</button>
+    
+    <div id="status">Click the button to request permission</div>
+    
+    <div class="instructions">
+      <h2>Chrome Permission Instructions</h2>
+      <p>If you're still having issues with microphone permissions in Chrome, follow these steps:</p>
+      <ol>
+        <li>Click on the lock icon (or site settings icon) in the address bar</li>
+        <li>Make sure "Microphone" is set to "Allow"</li>
+        <li>If you don't see the microphone option or it's blocked, you may need to reset permissions for this site</li>
+        <li>You can also go to Chrome Settings → Privacy and Security → Site Settings → Microphone to manage permissions</li>
+      </ol>
+      <p>After granting permission, return to the extension popup and try again.</p>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const permissionBtn = document.getElementById('permissionBtn');
+      const status = document.getElementById('status');
+      
+      // Check if permission was previously granted
+      if (navigator.permissions) {
+        navigator.permissions.query({ name: 'microphone' })
+          .then(permissionStatus => {
+            console.log('Current microphone permission state:', permissionStatus.state);
+            if (permissionStatus.state === 'granted') {
+              status.textContent = 'Microphone permission is already granted! You can close this tab and use the extension.';
+              status.className = 'success';
+              permissionBtn.textContent = 'Permission Already Granted';
+              permissionBtn.disabled = true;
+              
+              // Store the permission status
+              chrome.storage.local.set({ microphonePermission: true }, function() {
+                console.log('Permission saved to storage');
+              });
+            }
+          });
+      }
+      
+      permissionBtn.addEventListener('click', async function() {
+        status.textContent = 'Requesting microphone permission...';
+        status.className = '';
+        
+        try {
+          // Request microphone access with specific constraints for better compatibility
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true
+            } 
+          });
+          
+          // Keep the stream active for a moment to ensure Chrome registers the permission
+          setTimeout(() => {
+            // Then stop all tracks
+            stream.getTracks().forEach(track => track.stop());
+            console.log('Microphone stream stopped after successful permission');
+          }, 1000);
+          
+          // Save the permission status
+          chrome.storage.local.set({ microphonePermission: true }, function() {
+            console.log('Permission saved to storage');
+          });
+          
+          status.textContent = 'Microphone permission granted! You can now close this tab and use the extension.';
+          status.className = 'success';
+          permissionBtn.textContent = 'Permission Granted';
+          permissionBtn.disabled = true;
+        } catch (error) {
+          console.error('Microphone permission error:', error);
+          status.textContent = 'Error: ' + error.message + '. Please check the instructions below.';
+          status.className = 'error';
+        }
+      });
+    });
+  </script>
+</body>
+</html> 

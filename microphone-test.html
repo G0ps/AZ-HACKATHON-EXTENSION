@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Microphone Test</title>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    h1 {
+      color: #4285f4;
+      text-align: center;
+    }
+    
+    .container {
+      background-color: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 0;
+    }
+    
+    button:hover {
+      background-color: #3367d6;
+    }
+    
+    #status {
+      margin: 20px 0;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    .info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+    }
+    
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    
+    .audio-visualizer {
+      width: 100%;
+      height: 100px;
+      background-color: #f0f0f0;
+      margin: 20px 0;
+      position: relative;
+    }
+    
+    .audio-bar {
+      position: absolute;
+      bottom: 0;
+      background-color: #4285f4;
+      width: 5px;
+      transition: height 0.1s ease;
+    }
+  </style>
+</head>
+<body>
+  <h1>Microphone Test Page</h1>
+  
+  <div class="container">
+    <h2>Test Your Microphone</h2>
+    <p>This page will help you test your microphone and ensure that Chrome has the proper permissions.</p>
+    
+    <button id="testBtn">Test Microphone</button>
+    <button id="stopBtn" disabled>Stop Test</button>
+    
+    <div id="status" class="info">Click "Test Microphone" to begin.</div>
+    
+    <div class="audio-visualizer" id="visualizer">
+      <!-- Audio bars will be added here dynamically -->
+    </div>
+    
+    <h3>Microphone Information:</h3>
+    <pre id="micInfo">No information available yet.</pre>
+    
+    <h3>Troubleshooting:</h3>
+    <ol>
+      <li>Make sure your microphone is properly connected to your computer.</li>
+      <li>When prompted, click "Allow" to give this page permission to use your microphone.</li>
+      <li>If you accidentally denied permission, click the lock/info icon in the address bar and change the microphone setting to "Allow".</li>
+      <li>Try refreshing the page after granting permission.</li>
+      <li>Check your system settings to ensure your microphone is set as the default input device.</li>
+    </ol>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const testBtn = document.getElementById('testBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const status = document.getElementById('status');
+      const micInfo = document.getElementById('micInfo');
+      const visualizer = document.getElementById('visualizer');
+      
+      let stream = null;
+      let audioContext = null;
+      let analyser = null;
+      let dataArray = null;
+      let visualizerBars = [];
+      let animationId = null;
+      
+      // Create visualizer bars
+      function createVisualizerBars() {
+        visualizer.innerHTML = '';
+        const barCount = 64;
+        const barWidth = visualizer.clientWidth / barCount;
+        
+        for (let i = 0; i < barCount; i++) {
+          const bar = document.createElement('div');
+          bar.className = 'audio-bar';
+          bar.style.left = (i * barWidth) + 'px';
+          bar.style.width = (barWidth - 1) + 'px';
+          bar.style.height = '0px';
+          visualizer.appendChild(bar);
+          visualizerBars.push(bar);
+        }
+      }
+      
+      // Update visualizer
+      function updateVisualizer() {
+        if (!analyser) return;
+        
+        analyser.getByteFrequencyData(dataArray);
+        
+        for (let i = 0; i < visualizerBars.length; i++) {
+          const value = dataArray[i] || 0;
+          const percent = value / 255;
+          const height = percent * visualizer.clientHeight;
+          visualizerBars[i].style.height = height + 'px';
+        }
+        
+        animationId = requestAnimationFrame(updateVisualizer);
+      }
+      
+      // Test microphone
+      async function testMicrophone() {
+        try {
+          status.textContent = 'Requesting microphone access...';
+          status.className = 'info';
+          
+          // Request microphone access
+          stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true
+            } 
+          });
+          
+          // Get microphone information
+          const tracks = stream.getAudioTracks();
+          const trackInfo = tracks.map(track => {
+            const settings = track.getSettings();
+            return {
+              label: track.label,
+              enabled: track.enabled,
+              muted: track.muted,
+              readyState: track.readyState,
+              settings: settings
+            };
+          });
+          
+          micInfo.textContent = JSON.stringify(trackInfo, null, 2);
+          
+          // Set up audio visualizer
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioContext.createMediaStreamSource(stream);
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 256;
+          source.connect(analyser);
+          
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
+          createVisualizerBars();
+          updateVisualizer();
+          
+          status.textContent = 'Microphone is working! Speak to see the visualizer respond.';
+          status.className = 'success';
+          testBtn.disabled = true;
+          stopBtn.disabled = false;
+        } catch (error) {
+          console.error('Microphone error:', error);
+          status.textContent = 'Error: ' + error.message;
+          status.className = 'error';
+          micInfo.textContent = 'Error accessing microphone: ' + error.message;
+        }
+      }
+      
+      // Stop microphone test
+      function stopTest() {
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+          stream = null;
+        }
+        
+        if (audioContext) {
+          audioContext.close();
+          audioContext = null;
+          analyser = null;
+        }
+        
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+        
+        // Reset visualizer
+        visualizerBars.forEach(bar => {
+          bar.style.height = '0px';
+        });
+        
+        status.textContent = 'Microphone test stopped.';
+        status.className = 'info';
+        testBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+      
+      // Event listeners
+      testBtn.addEventListener('click', testMicrophone);
+      stopBtn.addEventListener('click', stopTest);
+      
+      // Check if microphone permission is already granted
+      if (navigator.permissions) {
+        navigator.permissions.query({ name: 'microphone' })
+          .then(permissionStatus => {
+            micInfo.textContent = 'Current microphone permission state: ' + permissionStatus.state;
+            
+            if (permissionStatus.state === 'granted') {
+              status.textContent = 'Microphone permission is already granted. Click "Test Microphone" to verify it works.';
+              status.className = 'success';
+            } else if (permissionStatus.state === 'denied') {
+              status.textContent = 'Microphone permission is denied. Please click the lock icon in the address bar and change the setting.';
+              status.className = 'error';
+            }
+            
+            // Listen for permission changes
+            permissionStatus.onchange = function() {
+              micInfo.textContent = 'Microphone permission state changed to: ' + this.state;
+              
+              if (this.state === 'granted') {
+                status.textContent = 'Microphone permission granted! Click "Test Microphone" to verify it works.';
+                status.className = 'success';
+              } else {
+                status.textContent = 'Microphone permission is ' + this.state + '.';
+                status.className = this.state === 'denied' ? 'error' : 'info';
+              }
+            };
+          })
+          .catch(error => {
+            console.error('Error checking permission:', error);
+          });
+      }
+    });
+  </script>
+</body>
+</html> 
